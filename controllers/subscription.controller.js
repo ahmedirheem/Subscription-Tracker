@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import Subscription from "../models/subscription.model.js";
+import { workflowClient } from "../config/upstash.js";
+import { SERVER_URL } from "../config/env.js";
 
 export const createSubscription = async (req, res, next) => {
   try {
@@ -8,11 +10,23 @@ export const createSubscription = async (req, res, next) => {
       user: req.user.id,
     });
 
+    const { workflowRunId } = await workflowClient.trigger({
+      url: `${SERVER_URL}/api/v1/workflows/subscription/reminder`,
+      body: {
+        subscriptionId: subscription.id,
+      },
+      headers: {
+        "content-type": "application/json",
+      },
+      retries: 0,
+    });
+
     res.status(201).json({
       success: true,
       message: "Subscription created successfully",
       data: {
         subscription,
+        workflowRunId,
       },
     });
   } catch (error) {
@@ -27,7 +41,7 @@ export const getUserSubscriptions = async (req, res, next) => {
       // error.statusCode = 401;
       // throw error;
 
-      throw new ApiError(401, "You are not the owner of this account")
+      throw new ApiError(401, "You are not the owner of this account");
     }
 
     const subscriptions = await Subscription.find({
@@ -69,7 +83,7 @@ export const getSubscription = async (req, res, next) => {
       // error.statusCode = 404;
       // throw error;
 
-      throw new ApiError(404, "Subscription not found")
+      throw new ApiError(404, "Subscription not found");
     }
 
     res.status(200).json({
@@ -97,7 +111,7 @@ export const deleteSubscription = async (req, res, next) => {
       // error.statusCode = 404;
       // throw error;
 
-      throw new ApiError(404, "Subscription not found")
+      throw new ApiError(404, "Subscription not found");
     }
 
     if (subscription.user.toString() !== req.user.id) {
@@ -105,7 +119,7 @@ export const deleteSubscription = async (req, res, next) => {
       // error.statusCode = 403;
       // throw error;
 
-      throw new ApiError(403, "Unauthorized: Not your subscription")
+      throw new ApiError(403, "Unauthorized: Not your subscription");
     }
 
     await Subscription.deleteOne({ _id: req.params.id }).session(session);
@@ -140,7 +154,7 @@ export const updateSubscription = async (req, res, next) => {
       // error.statusCode = 404;
       // throw error;
 
-      throw new ApiError(404, "Subscription not found")
+      throw new ApiError(404, "Subscription not found");
     }
 
     if (subscription.user.toString() !== req.user.id) {
@@ -148,7 +162,7 @@ export const updateSubscription = async (req, res, next) => {
       // error.statusCode = 403;
       // throw error;
 
-      throw new ApiError(403, "Unauthorized: Not your subscription")
+      throw new ApiError(403, "Unauthorized: Not your subscription");
     }
 
     const {
