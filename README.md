@@ -1,0 +1,1 @@
+The Subscription Tracker is a RESTful API built with Node.js, Express, and MongoDB that allows users to manage and track their subscriptions. It enables features like user registration, login, and secure session handling using JWT. Users can add, update, delete, and view their active subscriptions, helping them stay on top of recurring payments and avoid unwanted charges.
